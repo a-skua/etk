@@ -1,4 +1,4 @@
-.PHONY: fmt test run
+.PHONY: fmt test run debug
 
 fmt:
 	@go fmt ./...
@@ -8,3 +8,6 @@ test:
 
 run:
 	@go run ./example
+
+debug:
+	@go run -tags=ebitenginedebug ./example

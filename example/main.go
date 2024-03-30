@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bytes"
+	"image"
 	"image/color"
+	_ "image/jpeg"
 	"log"
 	"time"
 
 	"github.com/a-skua/etk"
+	"github.com/a-skua/etk/widget"
 	"github.com/hajimehoshi/bitmapfont/v3"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
 	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
@@ -41,16 +46,7 @@ func (s *scene1) Update() error {
 
 func (s *scene1) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x80, 0x80, 0x80, 0xff})
-	text.Draw(screen, "Hello, World!", bitmapfont.Face, s.currentX, s.currentY, color.White)
-}
-
-type scene2 struct {
-	etk.DefaultScene
-}
-
-func (s *scene2) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{0xaa, 0xaa, 0xaa, 0x00})
-	text.Draw(screen, "Goodbye, 世界!", bitmapfont.Face, 0, 12, color.White)
+	text.Draw(screen, "Hello, 世界!", bitmapfont.Face, s.currentX, s.currentY, color.White)
 }
 
 func main() {
@@ -61,6 +57,12 @@ func main() {
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Hello, World!")
+
+	ebitenPng, _, err := image.Decode(bytes.NewReader(images.Ebiten_png))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	scenes := []etk.Scene{
 		&etk.DefaultScene{},
 		&scene1{
@@ -70,10 +72,72 @@ func main() {
 			moveY:    100,
 			moveTime: 5 * time.Second,
 		},
-		&scene2{},
+		&etk.DefaultScene{
+			Widget: widget.NewStack(
+				widget.Vertical,
+				widget.NewBox(
+					widget.NewLayer(
+						widget.NewBox(
+							widget.NewFill(image.Point{100, 100}, color.Gray{0xff}),
+							widget.Margin{},
+							widget.Padding{},
+						),
+						widget.NewBox(
+							widget.NewFill(image.Point{80, 80}, color.Gray{0x88}),
+							widget.Margin{Top: 10, Left: 10},
+							widget.Padding{},
+						),
+						widget.NewBox(
+							widget.NewFill(image.Point{60, 60}, color.Gray{0x00}).AddText("Layter", color.White),
+							widget.Margin{Top: 20, Left: 20},
+							widget.Padding{},
+						),
+					),
+					widget.Margin{Left: 10, Top: 10},
+					widget.Padding{},
+				),
+				widget.NewBox(
+					widget.NewFill(image.Point{80, 80}, color.White),
+					widget.Margin{Left: 10, Top: 10},
+					widget.Padding{},
+				),
+				widget.NewBox(
+					widget.NewFill(image.Point{40, 40}, color.White),
+					widget.Margin{Left: 10, Top: 10},
+					widget.Padding{},
+				),
+				widget.NewBox(
+					widget.NewFill(image.Point{100, 16}, color.Gray{0x88}).AddText("Vertical", color.White),
+					widget.Margin{Left: 10, Top: 10},
+					widget.Padding{},
+				),
+				widget.NewStack(
+					widget.Horizontal,
+					widget.NewBox(
+						widget.NewFill(image.Point{100, 100}, color.White),
+						widget.Margin{Left: 10, Top: 10},
+						widget.Padding{},
+					),
+					widget.NewBox(
+						widget.NewFill(image.Point{100, 16}, color.Gray{0x88}).AddText("Horizontal", color.White),
+						widget.Margin{Left: 10, Top: 10},
+						widget.Padding{},
+					),
+					widget.NewBox(
+						widget.NewFill(image.Point{80, 80}, color.White),
+						widget.Margin{Left: 10, Top: 10},
+						widget.Padding{},
+					),
+					widget.NewBox(
+						widget.NewImage(ebitenPng),
+						widget.Margin{Left: 10, Top: 10},
+						widget.Padding{},
+					),
+				),
+			),
+		},
 	}
 	if err := ebiten.RunGame(etk.New(screenWidth, screenHeight, scenes[0], scenes[1:]...).Debug()); err != nil {
-
 		log.Fatal(err)
 	}
 }
