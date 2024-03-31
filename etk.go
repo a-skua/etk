@@ -15,6 +15,7 @@ type Scene interface {
 	ebiten.Game
 	Init()
 	Next() bool
+	Previous() bool
 }
 
 type DefaultScene struct {
@@ -25,6 +26,10 @@ func (DefaultScene) Init() {}
 
 func (DefaultScene) Next() bool {
 	return inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
+}
+
+func (DefaultScene) Previous() bool {
+	return false
 }
 
 func (DefaultScene) Update() error {
@@ -51,6 +56,13 @@ func (s *scene) next() {
 	s.current++
 	if s.current >= len(s.list) {
 		s.current = 0
+	}
+}
+
+func (s *scene) prev() {
+	s.current--
+	if s.current < 0 {
+		s.current = len(s.list) - 1
 	}
 }
 
@@ -82,6 +94,9 @@ func New(width, height int, scene Scene, scenes ...Scene) *Game {
 func (g *Game) Update() error {
 	if g.scene.Current().Next() {
 		g.scene.next()
+		g.scene.Current().Init()
+	} else if g.scene.Current().Previous() {
+		g.scene.prev()
 		g.scene.Current().Init()
 	}
 

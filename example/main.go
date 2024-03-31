@@ -13,6 +13,7 @@ import (
 	"github.com/hajimehoshi/bitmapfont/v3"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
@@ -49,6 +50,18 @@ func (s *scene1) Draw(screen *ebiten.Image) {
 	text.Draw(screen, "Hello, 世界!", bitmapfont.Face, s.currentX, s.currentY, color.White)
 }
 
+type sceneSwitcher struct {
+	etk.DefaultScene
+}
+
+func (s *sceneSwitcher) Previous() bool {
+	return inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft)
+}
+
+func (s *sceneSwitcher) Next() bool {
+	return inpututil.IsKeyJustPressed(ebiten.KeyArrowRight)
+}
+
 func main() {
 	const (
 		screenWidth  = 960
@@ -71,6 +84,15 @@ func main() {
 			moveX:    100,
 			moveY:    100,
 			moveTime: 5 * time.Second,
+		},
+		&sceneSwitcher{
+			DefaultScene: etk.DefaultScene{
+				Widget: widget.NewBox(
+					widget.NewFill(image.Point{100, 32}, color.Gray{0x88}).AddText("Prev: ←\nNext: →", color.White),
+					widget.Margin{Top: 100, Left: 100},
+					widget.Padding{},
+				),
+			},
 		},
 		&etk.DefaultScene{
 			Widget: widget.NewStack(
