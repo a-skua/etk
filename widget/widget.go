@@ -12,11 +12,43 @@ type Widget interface {
 	Position() image.Point
 	Size() image.Point
 	AddText(string, color.Color) Widget
+	Const() Widget
 }
 
 type text struct {
 	str   string
 	color color.Color
+}
+
+// Image Widget
+type Image struct {
+	image *ebiten.Image
+}
+
+func NewImage(img image.Image) *Image {
+	image := ebiten.NewImageFromImage(img)
+	return &Image{image}
+}
+
+func (i *Image) Image() *ebiten.Image {
+	return i.image
+}
+
+func (i *Image) Position() image.Point {
+	return image.Point{}
+}
+
+func (i *Image) Size() image.Point {
+	return i.image.Bounds().Size()
+}
+
+func (i *Image) AddText(str string, color color.Color) Widget {
+	drawText(i.image, str, color)
+	return i
+}
+
+func (i *Image) Const() Widget {
+	return i
 }
 
 // Fill Widget
@@ -52,6 +84,10 @@ func (f *Fill) Size() image.Point {
 func (f *Fill) AddText(str string, color color.Color) Widget {
 	f.texts = append(f.texts, text{str, color})
 	return f
+}
+
+func (f *Fill) Const() Widget {
+	return &Image{f.Image()}
 }
 
 // Box Widget
@@ -102,6 +138,10 @@ func (b *Box) Size() image.Point {
 func (b *Box) AddText(str string, color color.Color) Widget {
 	b.texts = append(b.texts, text{str, color})
 	return b
+}
+
+func (b *Box) Const() Widget {
+	return &Image{b.Image()}
 }
 
 // HorizontalStack Widget
@@ -159,6 +199,10 @@ func (s *HorizontalStack) AddText(str string, color color.Color) Widget {
 		w.AddText(str, color)
 	}
 	return s
+}
+
+func (s *HorizontalStack) Const() Widget {
+	return &Image{s.Image()}
 }
 
 // VerticalStack Widget
@@ -221,6 +265,10 @@ func (s *VerticalStack) AddText(str string, color color.Color) Widget {
 		w.AddText(str, color)
 	}
 	return s
+}
+
+func (s *VerticalStack) Const() Widget {
+	return &Image{s.Image()}
 }
 
 // Stack Widget
@@ -306,29 +354,6 @@ func (l *Layer) AddText(str string, color color.Color) Widget {
 	return l
 }
 
-// Image Widget
-type Image struct {
-	image *ebiten.Image
-}
-
-func NewImage(img image.Image) *Image {
-	image := ebiten.NewImageFromImage(img)
-	return &Image{image}
-}
-
-func (i *Image) Image() *ebiten.Image {
-	return i.image
-}
-
-func (i *Image) Position() image.Point {
-	return image.Point{}
-}
-
-func (i *Image) Size() image.Point {
-	return i.image.Bounds().Size()
-}
-
-func (i *Image) AddText(str string, color color.Color) Widget {
-	drawText(i.image, str, color)
-	return i
+func (l *Layer) Const() Widget {
+	return &Image{l.Image()}
 }
