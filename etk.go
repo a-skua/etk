@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"image/color"
 
-	"github.com/a-skua/etk/widget"
+	"github.com/a-skua/etk/craft"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -19,7 +19,7 @@ type Scene interface {
 }
 
 type DefaultScene struct {
-	Widget widget.Widget
+	Craft craft.Craft
 }
 
 func (DefaultScene) Init() {}
@@ -38,8 +38,8 @@ func (DefaultScene) Update() error {
 
 func (s DefaultScene) Draw(screen *ebiten.Image) {
 	screen.Fill(color.Black)
-	if s.Widget != nil {
-		screen.DrawImage(s.Widget.Image(), nil)
+	if s.Craft != nil {
+		screen.DrawImage(s.Craft.Image(), nil)
 	}
 }
 

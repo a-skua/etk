@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/a-skua/etk"
-	"github.com/a-skua/etk/widget"
+	"github.com/a-skua/etk/craft"
 	"github.com/hajimehoshi/bitmapfont/v3"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
@@ -87,71 +87,71 @@ func main() {
 		},
 		&sceneSwitcher{
 			DefaultScene: etk.DefaultScene{
-				Widget: widget.NewBox(
-					widget.NewFill(image.Point{100, 32}, color.Gray{0x88}).AddText("Prev: ←\nNext: →", color.White),
-					widget.Margin{Top: 100, Left: 100},
-					widget.Padding{},
+				Craft: craft.NewBox(
+					craft.NewFill(image.Point{100, 32}, color.Gray{0x88}).AddText("Prev: ←\nNext: →", color.White),
+					craft.Margin{Top: 100, Left: 100},
+					craft.Padding{},
 				).Const(),
 			},
 		},
 		&etk.DefaultScene{
-			Widget: widget.NewVerticalStack(
-				widget.NewBox(
-					widget.NewLayer(
-						widget.NewBox(
-							widget.NewFill(image.Point{100, 100}, color.Gray{0xff}),
-							widget.Margin{},
-							widget.Padding{},
+			Craft: craft.NewVerticalStack(
+				craft.NewBox(
+					craft.NewLayer(
+						craft.NewBox(
+							craft.NewFill(image.Point{100, 100}, color.Gray{0xff}),
+							craft.Margin{},
+							craft.Padding{},
 						),
-						widget.NewBox(
-							widget.NewFill(image.Point{80, 80}, color.Gray{0x88}),
-							widget.Margin{Top: 10, Left: 10},
-							widget.Padding{},
+						craft.NewBox(
+							craft.NewFill(image.Point{80, 80}, color.Gray{0x88}),
+							craft.Margin{Top: 10, Left: 10},
+							craft.Padding{},
 						),
-						widget.NewBox(
-							widget.NewFill(image.Point{60, 60}, color.Gray{0x00}).AddText("Layter", color.White),
-							widget.Margin{Top: 20, Left: 20},
-							widget.Padding{},
+						craft.NewBox(
+							craft.NewFill(image.Point{60, 60}, color.Gray{0x00}).AddText("Layter", color.White),
+							craft.Margin{Top: 20, Left: 20},
+							craft.Padding{},
 						),
 					),
-					widget.Margin{Left: 10, Top: 10},
-					widget.Padding{},
+					craft.Margin{Left: 10, Top: 10},
+					craft.Padding{},
 				),
-				widget.NewBox(
-					widget.NewFill(image.Point{80, 80}, color.White),
-					widget.Margin{Left: 10, Top: 10},
-					widget.Padding{},
+				craft.NewBox(
+					craft.NewFill(image.Point{80, 80}, color.White),
+					craft.Margin{Left: 10, Top: 10},
+					craft.Padding{},
 				),
-				widget.NewBox(
-					widget.NewFill(image.Point{40, 40}, color.White),
-					widget.Margin{Left: 10, Top: 10},
-					widget.Padding{},
+				craft.NewBox(
+					craft.NewFill(image.Point{40, 40}, color.White),
+					craft.Margin{Left: 10, Top: 10},
+					craft.Padding{},
 				),
-				widget.NewBox(
-					widget.NewFill(image.Point{100, 16}, color.Gray{0x88}).AddText("Vertical", color.White),
-					widget.Margin{Left: 10, Top: 10},
-					widget.Padding{},
+				craft.NewBox(
+					craft.NewFill(image.Point{100, 16}, color.Gray{0x88}).AddText("Vertical", color.White),
+					craft.Margin{Left: 10, Top: 10},
+					craft.Padding{},
 				),
-				widget.NewHorizontalStack(
-					widget.NewBox(
-						widget.NewFill(image.Point{100, 100}, color.White),
-						widget.Margin{Left: 10, Top: 10},
-						widget.Padding{},
+				craft.NewHorizontalStack(
+					craft.NewBox(
+						craft.NewFill(image.Point{100, 100}, color.White),
+						craft.Margin{Left: 10, Top: 10},
+						craft.Padding{},
 					),
-					widget.NewBox(
-						widget.NewFill(image.Point{100, 16}, color.Gray{0x88}).AddText("Horizontal", color.White),
-						widget.Margin{Left: 10, Top: 10},
-						widget.Padding{},
+					craft.NewBox(
+						craft.NewFill(image.Point{100, 16}, color.Gray{0x88}).AddText("Horizontal", color.White),
+						craft.Margin{Left: 10, Top: 10},
+						craft.Padding{},
 					),
-					widget.NewBox(
-						widget.NewFill(image.Point{80, 80}, color.White),
-						widget.Margin{Left: 10, Top: 10},
-						widget.Padding{},
+					craft.NewBox(
+						craft.NewFill(image.Point{80, 80}, color.White),
+						craft.Margin{Left: 10, Top: 10},
+						craft.Padding{},
 					),
-					widget.NewBox(
-						widget.NewImage(ebitenPng),
-						widget.Margin{Left: 10, Top: 10},
-						widget.Padding{},
+					craft.NewBox(
+						craft.NewImage(ebitenPng),
+						craft.Margin{Left: 10, Top: 10},
+						craft.Padding{},
 					),
 				),
 			).Const(),

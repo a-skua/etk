@@ -1,4 +1,4 @@
-package widget
+package craft
 
 import (
 	"fmt"
@@ -7,42 +7,26 @@ import (
 	"testing"
 )
 
-var _ Widget = NewImage(image.NewRGBA(image.Rect(0, 0, 100, 100)))
-var _ Widget = NewFill(image.Point{10, 10}, color.White)
-var _ Widget = NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{})
-var _ Widget = NewStack(
+var _ Craft = NewImage(image.NewRGBA(image.Rect(0, 0, 100, 100)))
+var _ Craft = NewFill(image.Point{10, 10}, color.White)
+var _ Craft = NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{})
+var _ Craft = NewStack(
 	Vertical,
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 )
-var _ Widget = NewHorizontalStack(
+var _ Craft = NewHorizontalStack(
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 )
-var _ Widget = NewVerticalStack(
+var _ Craft = NewVerticalStack(
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 )
-var _ Widget = NewLayer(
+var _ Craft = NewLayer(
 	NewFill(image.Point{10, 20}, color.White),
 	NewFill(image.Point{20, 10}, color.White),
 )
-
-var _ *Image = NewImage(image.NewRGBA(image.Rect(0, 0, 100, 100))).Const().(*Image)
-var _ *Image = NewFill(image.Point{10, 10}, color.White).Const().(*Image)
-var _ *Image = NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}).Const().(*Image)
-var _ *Image = NewHorizontalStack(
-	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
-	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
-).Const().(*Image)
-var _ *Image = NewVerticalStack(
-	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
-	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
-).Const().(*Image)
-var _ *Image = NewLayer(
-	NewFill(image.Point{10, 20}, color.White),
-	NewFill(image.Point{20, 10}, color.White),
-).Const().(*Image)
 
 func TestBoxPosition(t *testing.T) {
 	tests := []struct {
@@ -68,11 +52,11 @@ func TestBoxPosition(t *testing.T) {
 
 func TestHorizontalStackSize(t *testing.T) {
 	tests := []struct {
-		widgets []Widget
+		widgets []Craft
 		want    image.Point
 	}{
 		{
-			[]Widget{
+			[]Craft{
 				NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 				NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 			},
@@ -93,11 +77,11 @@ func TestHorizontalStackSize(t *testing.T) {
 
 func TestVerticalStackSize(t *testing.T) {
 	tests := []struct {
-		widgets []Widget
+		widgets []Craft
 		want    image.Point
 	}{
 		{
-			[]Widget{
+			[]Craft{
 				NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 				NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 			},
@@ -118,11 +102,11 @@ func TestVerticalStackSize(t *testing.T) {
 
 func TestLayerSize(t *testing.T) {
 	tests := []struct {
-		widgets []Widget
+		widgets []Craft
 		want    image.Point
 	}{
 		{
-			[]Widget{
+			[]Craft{
 				NewFill(image.Point{10, 30}, color.White),
 				NewFill(image.Point{20, 20}, color.White),
 				NewFill(image.Point{30, 10}, color.White),

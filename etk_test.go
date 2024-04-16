@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-var testDefaultSceneType Scene = DefaultScene{}
+var _ Scene = DefaultScene{}
 
 func Test_scene_next(t *testing.T) {
 	s := scene{

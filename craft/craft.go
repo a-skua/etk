@@ -1,4 +1,4 @@
-package widget
+package craft
 
 import (
 	"image"
@@ -7,12 +7,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Widget interface {
+type Craft interface {
 	Image() *ebiten.Image
 	Position() image.Point
 	Size() image.Point
-	AddText(string, color.Color) Widget
-	Const() Widget
+	AddText(string, color.Color) Craft
+	Const() *Image
 }
 
 type text struct {
@@ -20,7 +20,7 @@ type text struct {
 	color color.Color
 }
 
-// Image Widget
+// Image Craft
 type Image struct {
 	image *ebiten.Image
 }
@@ -42,16 +42,16 @@ func (i *Image) Size() image.Point {
 	return i.image.Bounds().Size()
 }
 
-func (i *Image) AddText(str string, color color.Color) Widget {
+func (i *Image) AddText(str string, color color.Color) Craft {
 	drawText(i.image, str, color)
 	return i
 }
 
-func (i *Image) Const() Widget {
+func (i *Image) Const() *Image {
 	return i
 }
 
-// Fill Widget
+// Fill Craft
 type Fill struct {
 	size  image.Point
 	color color.Color
@@ -81,18 +81,18 @@ func (f *Fill) Size() image.Point {
 	return f.size
 }
 
-func (f *Fill) AddText(str string, color color.Color) Widget {
+func (f *Fill) AddText(str string, color color.Color) Craft {
 	f.texts = append(f.texts, text{str, color})
 	return f
 }
 
-func (f *Fill) Const() Widget {
+func (f *Fill) Const() *Image {
 	return &Image{f.Image()}
 }
 
-// Box Widget
+// Box Craft
 type Box struct {
-	widget  Widget
+	craft   Craft
 	margin  Margin
 	padding Padding
 	texts   []text
@@ -106,8 +106,8 @@ type space struct {
 	Left, Top, Right, Bottom int
 }
 
-func NewBox(widget Widget, margin Margin, padding Padding) *Box {
-	return &Box{widget, margin, padding, []text{}}
+func NewBox(craft Craft, margin Margin, padding Padding) *Box {
+	return &Box{craft, margin, padding, []text{}}
 }
 
 func (b *Box) Position() image.Point {
@@ -121,7 +121,7 @@ func (b *Box) Image() *ebiten.Image {
 	op := &ebiten.DrawImageOptions{}
 	position := calcPosition(b.margin, b.padding)
 	op.GeoM.Translate(float64(position.X), float64(position.Y))
-	image.DrawImage(b.widget.Image(), op)
+	image.DrawImage(b.craft.Image(), op)
 
 	for _, text := range b.texts {
 		drawText(image, text.str, text.color)
@@ -131,20 +131,20 @@ func (b *Box) Image() *ebiten.Image {
 }
 
 func (b *Box) Size() image.Point {
-	return calcSize(b.widget.Size(), b.margin, b.padding)
+	return calcSize(b.craft.Size(), b.margin, b.padding)
 
 }
 
-func (b *Box) AddText(str string, color color.Color) Widget {
+func (b *Box) AddText(str string, color color.Color) Craft {
 	b.texts = append(b.texts, text{str, color})
 	return b
 }
 
-func (b *Box) Const() Widget {
+func (b *Box) Const() *Image {
 	return &Image{b.Image()}
 }
 
-// HorizontalStack Widget
+// HorizontalStack Craft
 //
 // ```
 // +---+---+---+
@@ -152,12 +152,12 @@ func (b *Box) Const() Widget {
 // +---+---+---+
 // ```
 type HorizontalStack struct {
-	widgets []Widget
-	texts   []text
+	crafts []Craft
+	texts  []text
 }
 
-func NewHorizontalStack(widgets ...Widget) *HorizontalStack {
-	return &HorizontalStack{widgets, []text{}}
+func NewHorizontalStack(crafts ...Craft) *HorizontalStack {
+	return &HorizontalStack{crafts, []text{}}
 }
 
 func (s *HorizontalStack) Image() *ebiten.Image {
@@ -165,11 +165,11 @@ func (s *HorizontalStack) Image() *ebiten.Image {
 
 	image := ebiten.NewImage(size.X, size.Y)
 	x, y := 0.0, 0.0
-	for _, w := range s.widgets {
+	for _, c := range s.crafts {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(x, y)
-		image.DrawImage(w.Image(), op)
-		x += float64(w.Size().X)
+		image.DrawImage(c.Image(), op)
+		x += float64(c.Size().X)
 	}
 
 	for _, text := range s.texts {
@@ -185,27 +185,27 @@ func (s *HorizontalStack) Position() image.Point {
 
 func (s *HorizontalStack) Size() image.Point {
 	width, height := 0, 0
-	for _, w := range s.widgets {
-		size := w.Size()
+	for _, c := range s.crafts {
+		size := c.Size()
 		width += size.X
 		height = max(height, size.Y)
 	}
 	return image.Point{width, height}
 }
 
-func (s *HorizontalStack) AddText(str string, color color.Color) Widget {
+func (s *HorizontalStack) AddText(str string, color color.Color) Craft {
 	s.texts = append(s.texts, text{str, color})
-	for _, w := range s.widgets {
-		w.AddText(str, color)
+	for _, c := range s.crafts {
+		c.AddText(str, color)
 	}
 	return s
 }
 
-func (s *HorizontalStack) Const() Widget {
+func (s *HorizontalStack) Const() *Image {
 	return &Image{s.Image()}
 }
 
-// VerticalStack Widget
+// VerticalStack Craft
 //
 // ```
 // +---+
@@ -218,12 +218,12 @@ func (s *HorizontalStack) Const() Widget {
 //
 // ```
 type VerticalStack struct {
-	widgets []Widget
-	texts   []text
+	crafts []Craft
+	texts  []text
 }
 
-func NewVerticalStack(widgets ...Widget) *VerticalStack {
-	return &VerticalStack{widgets, []text{}}
+func NewVerticalStack(crafts ...Craft) *VerticalStack {
+	return &VerticalStack{crafts, []text{}}
 }
 
 func (s *VerticalStack) Image() *ebiten.Image {
@@ -231,11 +231,11 @@ func (s *VerticalStack) Image() *ebiten.Image {
 
 	image := ebiten.NewImage(size.X, size.Y)
 	x, y := 0.0, 0.0
-	for _, w := range s.widgets {
+	for _, c := range s.crafts {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(x, y)
-		image.DrawImage(w.Image(), op)
-		y += float64(w.Size().Y)
+		image.DrawImage(c.Image(), op)
+		y += float64(c.Size().Y)
 	}
 
 	for _, text := range s.texts {
@@ -251,31 +251,28 @@ func (s *VerticalStack) Position() image.Point {
 
 func (s *VerticalStack) Size() image.Point {
 	width, height := 0, 0
-	for _, w := range s.widgets {
-		size := w.Size()
+	for _, c := range s.crafts {
+		size := c.Size()
 		width = max(width, size.X)
 		height += size.Y
 	}
 	return image.Point{width, height}
 }
 
-func (s *VerticalStack) AddText(str string, color color.Color) Widget {
+func (s *VerticalStack) AddText(str string, color color.Color) Craft {
 	s.texts = append(s.texts, text{str, color})
-	for _, w := range s.widgets {
-		w.AddText(str, color)
-	}
 	return s
 }
 
-func (s *VerticalStack) Const() Widget {
+func (s *VerticalStack) Const() *Image {
 	return &Image{s.Image()}
 }
 
-// Stack Widget
+// Stack Craft
 //
 // Deprecated: Use HorizontalStack or VerticalStack instead.
 type Stack struct {
-	Widget
+	Craft
 }
 
 // Direction is the direction of the stack
@@ -291,14 +288,14 @@ const (
 // NewStack creates a new stack widget.
 //
 // Deprecated: Use NewHorizontalStack or NewVerticalStack instead.
-func NewStack(direction StackDirection, widgets ...Widget) *Stack {
+func NewStack(direction StackDirection, crafts ...Craft) *Stack {
 	if direction == Horizontal {
-		return &Stack{NewHorizontalStack(widgets...)}
+		return &Stack{NewHorizontalStack(crafts...)}
 	}
-	return &Stack{NewVerticalStack(widgets...)}
+	return &Stack{NewVerticalStack(crafts...)}
 }
 
-// Layer Widget
+// Layer Craft
 //
 // ```
 // +------+
@@ -309,19 +306,19 @@ func NewStack(direction StackDirection, widgets ...Widget) *Stack {
 // ....+------+ --> layer
 // ```
 type Layer struct {
-	widgets []Widget
-	texts   []text
+	crafts []Craft
+	texts  []text
 }
 
-func NewLayer(widgets ...Widget) *Layer {
-	return &Layer{widgets, []text{}}
+func NewLayer(crafts ...Craft) *Layer {
+	return &Layer{crafts, []text{}}
 }
 
 func (l *Layer) Image() *ebiten.Image {
 	size := l.Size()
 
 	image := ebiten.NewImage(size.X, size.Y)
-	for _, w := range l.widgets {
+	for _, w := range l.crafts {
 		op := &ebiten.DrawImageOptions{}
 		image.DrawImage(w.Image(), op)
 	}
@@ -339,8 +336,8 @@ func (l *Layer) Position() image.Point {
 
 func (l *Layer) Size() image.Point {
 	width, height := 0, 0
-	for _, w := range l.widgets {
-		img := w.Image()
+	for _, c := range l.crafts {
+		img := c.Image()
 		size := img.Bounds().Size()
 		width = max(width, size.X)
 		height = max(height, size.Y)
@@ -349,11 +346,11 @@ func (l *Layer) Size() image.Point {
 	return image.Point{width, height}
 }
 
-func (l *Layer) AddText(str string, color color.Color) Widget {
+func (l *Layer) AddText(str string, color color.Color) Craft {
 	l.texts = append(l.texts, text{str, color})
 	return l
 }
 
-func (l *Layer) Const() Widget {
+func (l *Layer) Const() *Image {
 	return &Image{l.Image()}
 }
