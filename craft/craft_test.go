@@ -10,11 +10,6 @@ import (
 var _ Craft = NewImage(image.NewRGBA(image.Rect(0, 0, 100, 100)))
 var _ Craft = NewFill(image.Point{10, 10}, color.White)
 var _ Craft = NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{})
-var _ Craft = NewStack(
-	Vertical,
-	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
-	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
-)
 var _ Craft = NewHorizontalStack(
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),
 	NewBox(NewFill(image.Point{10, 10}, color.White), Margin{}, Padding{}),

@@ -268,33 +268,6 @@ func (s *VerticalStack) Const() *Image {
 	return &Image{s.Image()}
 }
 
-// Stack Craft
-//
-// Deprecated: Use HorizontalStack or VerticalStack instead.
-type Stack struct {
-	Craft
-}
-
-// Direction is the direction of the stack
-type StackDirection int
-
-const (
-	// Horizontal stack
-	Horizontal StackDirection = iota
-	// Vertical stack
-	Vertical
-)
-
-// NewStack creates a new stack widget.
-//
-// Deprecated: Use NewHorizontalStack or NewVerticalStack instead.
-func NewStack(direction StackDirection, crafts ...Craft) *Stack {
-	if direction == Horizontal {
-		return &Stack{NewHorizontalStack(crafts...)}
-	}
-	return &Stack{NewVerticalStack(crafts...)}
-}
-
 // Layer Craft
 //
 // ```
