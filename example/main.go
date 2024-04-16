@@ -91,12 +91,11 @@ func main() {
 					widget.NewFill(image.Point{100, 32}, color.Gray{0x88}).AddText("Prev: ←\nNext: →", color.White),
 					widget.Margin{Top: 100, Left: 100},
 					widget.Padding{},
-				),
+				).Const(),
 			},
 		},
 		&etk.DefaultScene{
-			Widget: widget.NewStack(
-				widget.Vertical,
+			Widget: widget.NewVerticalStack(
 				widget.NewBox(
 					widget.NewLayer(
 						widget.NewBox(
@@ -133,8 +132,7 @@ func main() {
 					widget.Margin{Left: 10, Top: 10},
 					widget.Padding{},
 				),
-				widget.NewStack(
-					widget.Horizontal,
+				widget.NewHorizontalStack(
 					widget.NewBox(
 						widget.NewFill(image.Point{100, 100}, color.White),
 						widget.Margin{Left: 10, Top: 10},
@@ -156,7 +154,7 @@ func main() {
 						widget.Padding{},
 					),
 				),
-			),
+			).Const(),
 		},
 	}
 	if err := ebiten.RunGame(etk.New(screenWidth, screenHeight, scenes[0], scenes[1:]...).Debug()); err != nil {
