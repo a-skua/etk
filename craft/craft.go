@@ -7,16 +7,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Size image.Point
-
-type Margin struct {
-	Left, Top, Right, Bottom int
-}
-
-func MarginAll(v int) Margin {
-	return Margin{v, v, v, v}
-}
-
 // Craft
 type Craft interface {
 	Image() *ebiten.Image
