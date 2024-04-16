@@ -7,10 +7,20 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type Size image.Point
+
+type Margin struct {
+	Left, Top, Right, Bottom int
+}
+
+func MarginAll(v int) Margin {
+	return Margin{v, v, v, v}
+}
+
+// Craft
 type Craft interface {
 	Image() *ebiten.Image
-	Position() image.Point
-	Size() image.Point
+	Size() Size
 	AddText(string, color.Color) Craft
 	Const() *Image
 }
@@ -34,12 +44,8 @@ func (i *Image) Image() *ebiten.Image {
 	return i.image
 }
 
-func (i *Image) Position() image.Point {
-	return image.Point{}
-}
-
-func (i *Image) Size() image.Point {
-	return i.image.Bounds().Size()
+func (i *Image) Size() Size {
+	return Size(i.image.Bounds().Size())
 }
 
 func (i *Image) AddText(str string, color color.Color) Craft {
@@ -53,12 +59,12 @@ func (i *Image) Const() *Image {
 
 // Fill Craft
 type Fill struct {
-	size  image.Point
+	size  Size
 	color color.Color
 	texts []text
 }
 
-func NewFill(size image.Point, color color.Color) *Fill {
+func NewFill(size Size, color color.Color) *Fill {
 	return &Fill{size, color, []text{}}
 }
 
@@ -73,11 +79,7 @@ func (f *Fill) Image() *ebiten.Image {
 	return image
 }
 
-func (f *Fill) Position() image.Point {
-	return image.Point{}
-}
-
-func (f *Fill) Size() image.Point {
+func (f *Fill) Size() Size {
 	return f.size
 }
 
@@ -92,26 +94,13 @@ func (f *Fill) Const() *Image {
 
 // Box Craft
 type Box struct {
-	craft   Craft
-	margin  Margin
-	padding Padding
-	texts   []text
+	craft  Craft
+	margin Margin
+	texts  []text
 }
 
-type Margin space
-
-type Padding space
-
-type space struct {
-	Left, Top, Right, Bottom int
-}
-
-func NewBox(craft Craft, margin Margin, padding Padding) *Box {
-	return &Box{craft, margin, padding, []text{}}
-}
-
-func (b *Box) Position() image.Point {
-	return calcPosition(b.margin, b.padding)
+func NewBox(c Craft, m Margin) *Box {
+	return &Box{c, m, []text{}}
 }
 
 func (b *Box) Image() *ebiten.Image {
@@ -119,8 +108,7 @@ func (b *Box) Image() *ebiten.Image {
 
 	image := ebiten.NewImage(size.X, size.Y)
 	op := &ebiten.DrawImageOptions{}
-	position := calcPosition(b.margin, b.padding)
-	op.GeoM.Translate(float64(position.X), float64(position.Y))
+	op.GeoM.Translate(float64(b.margin.Left), float64(b.margin.Top))
 	image.DrawImage(b.craft.Image(), op)
 
 	for _, text := range b.texts {
@@ -130,9 +118,8 @@ func (b *Box) Image() *ebiten.Image {
 	return image
 }
 
-func (b *Box) Size() image.Point {
-	return calcSize(b.craft.Size(), b.margin, b.padding)
-
+func (b *Box) Size() Size {
+	return calcSize(b.craft.Size(), b.margin)
 }
 
 func (b *Box) AddText(str string, color color.Color) Craft {
@@ -179,18 +166,14 @@ func (s *HorizontalStack) Image() *ebiten.Image {
 	return image
 }
 
-func (s *HorizontalStack) Position() image.Point {
-	return image.Point{}
-}
-
-func (s *HorizontalStack) Size() image.Point {
+func (s *HorizontalStack) Size() Size {
 	width, height := 0, 0
 	for _, c := range s.crafts {
 		size := c.Size()
 		width += size.X
 		height = max(height, size.Y)
 	}
-	return image.Point{width, height}
+	return Size{width, height}
 }
 
 func (s *HorizontalStack) AddText(str string, color color.Color) Craft {
@@ -245,18 +228,14 @@ func (s *VerticalStack) Image() *ebiten.Image {
 	return image
 }
 
-func (s *VerticalStack) Position() image.Point {
-	return image.Point{}
-}
-
-func (s *VerticalStack) Size() image.Point {
+func (s *VerticalStack) Size() Size {
 	width, height := 0, 0
 	for _, c := range s.crafts {
 		size := c.Size()
 		width = max(width, size.X)
 		height += size.Y
 	}
-	return image.Point{width, height}
+	return Size{width, height}
 }
 
 func (s *VerticalStack) AddText(str string, color color.Color) Craft {
@@ -303,11 +282,7 @@ func (l *Layer) Image() *ebiten.Image {
 	return image
 }
 
-func (l *Layer) Position() image.Point {
-	return image.Point{}
-}
-
-func (l *Layer) Size() image.Point {
+func (l *Layer) Size() Size {
 	width, height := 0, 0
 	for _, c := range l.crafts {
 		img := c.Image()
@@ -316,7 +291,7 @@ func (l *Layer) Size() image.Point {
 		height = max(height, size.Y)
 	}
 
-	return image.Point{width, height}
+	return Size{width, height}
 }
 
 func (l *Layer) AddText(str string, color color.Color) Craft {
