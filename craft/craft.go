@@ -1,24 +1,25 @@
 package craft
 
 import (
+	"errors"
 	"image"
 	"image/color"
 
+	"github.com/a-skua/etk/craft/internal/util"
+	"github.com/a-skua/etk/craft/types"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // Craft
 type Craft interface {
 	Image() *ebiten.Image
-	Size() Size
-	AddText(string, color.Color) Craft
+	Size() types.Size
+	AddText(string, color.Color) Self
 	Const() *Image
+	Update(types.Position) error
 }
 
-type text struct {
-	str   string
-	color color.Color
-}
+type Self = Craft
 
 // Image Craft
 type Image struct {
@@ -34,12 +35,12 @@ func (i *Image) Image() *ebiten.Image {
 	return i.image
 }
 
-func (i *Image) Size() Size {
-	return Size(i.image.Bounds().Size())
+func (i *Image) Size() types.Size {
+	return types.Size(i.image.Bounds().Size())
 }
 
-func (i *Image) AddText(str string, color color.Color) Craft {
-	drawText(i.image, str, color)
+func (i *Image) AddText(str string, color color.Color) Self {
+	util.DrawText(i.image, str, color)
 	return i
 }
 
@@ -47,34 +48,38 @@ func (i *Image) Const() *Image {
 	return i
 }
 
-// Fill Craft
-type Fill struct {
-	size  Size
-	color color.Color
-	texts []text
+func (i *Image) Update(p types.Position) error {
+	return nil
 }
 
-func NewFill(size Size, color color.Color) *Fill {
-	return &Fill{size, color, []text{}}
+// Fill Craft
+type Fill struct {
+	size  types.Size
+	color color.Color
+	texts []types.TextInfo
+}
+
+func NewFill(size types.Size, color color.Color) *Fill {
+	return &Fill{size, color, []types.TextInfo{}}
 }
 
 func (f *Fill) Image() *ebiten.Image {
 	image := ebiten.NewImage(f.size.X, f.size.Y)
 	image.Fill(f.color)
 
-	for _, text := range f.texts {
-		drawText(image, text.str, text.color)
+	for _, t := range f.texts {
+		util.DrawText(image, t.Str, t.Color)
 	}
 
 	return image
 }
 
-func (f *Fill) Size() Size {
+func (f *Fill) Size() types.Size {
 	return f.size
 }
 
-func (f *Fill) AddText(str string, color color.Color) Craft {
-	f.texts = append(f.texts, text{str, color})
+func (f *Fill) AddText(str string, color color.Color) Self {
+	f.texts = append(f.texts, types.TextInfo{Str: str, Color: color})
 	return f
 }
 
@@ -82,15 +87,19 @@ func (f *Fill) Const() *Image {
 	return &Image{f.Image()}
 }
 
+func (f *Fill) Update(p types.Position) error {
+	return nil
+}
+
 // Box Craft
 type Box struct {
 	craft  Craft
-	margin Margin
-	texts  []text
+	margin types.Margin
+	texts  []types.TextInfo
 }
 
-func NewBox(c Craft, m Margin) *Box {
-	return &Box{c, m, []text{}}
+func NewBox(c Craft, m types.Margin) *Box {
+	return &Box{c, m, []types.TextInfo{}}
 }
 
 func (b *Box) Image() *ebiten.Image {
@@ -101,20 +110,24 @@ func (b *Box) Image() *ebiten.Image {
 	op.GeoM.Translate(float64(b.margin.Left), float64(b.margin.Top))
 	image.DrawImage(b.craft.Image(), op)
 
-	for _, text := range b.texts {
-		drawText(image, text.str, text.color)
+	for _, t := range b.texts {
+		util.DrawText(image, t.Str, t.Color)
 	}
 
 	return image
 }
 
-func (b *Box) Size() Size {
-	return calcSize(b.craft.Size(), b.margin)
+func (b *Box) Size() types.Size {
+	return util.CalcSize(b.craft.Size(), b.margin)
 }
 
-func (b *Box) AddText(str string, color color.Color) Craft {
-	b.texts = append(b.texts, text{str, color})
+func (b *Box) AddText(str string, color color.Color) Self {
+	b.texts = append(b.texts, types.TextInfo{Str: str, Color: color})
 	return b
+}
+
+func (b *Box) Update(p types.Position) error {
+	return b.craft.Update(p.Add(b.margin.Pos()))
 }
 
 func (b *Box) Const() *Image {
@@ -130,11 +143,11 @@ func (b *Box) Const() *Image {
 // ```
 type HorizontalStack struct {
 	crafts []Craft
-	texts  []text
+	texts  []types.TextInfo
 }
 
 func NewHorizontalStack(crafts ...Craft) *HorizontalStack {
-	return &HorizontalStack{crafts, []text{}}
+	return &HorizontalStack{crafts, []types.TextInfo{}}
 }
 
 func (s *HorizontalStack) Image() *ebiten.Image {
@@ -149,29 +162,37 @@ func (s *HorizontalStack) Image() *ebiten.Image {
 		x += float64(c.Size().X)
 	}
 
-	for _, text := range s.texts {
-		drawText(image, text.str, text.color)
+	for _, t := range s.texts {
+		util.DrawText(image, t.Str, t.Color)
 	}
 
 	return image
 }
 
-func (s *HorizontalStack) Size() Size {
-	width, height := 0, 0
+func (s *HorizontalStack) Size() types.Size {
+	size := types.Size{}
 	for _, c := range s.crafts {
-		size := c.Size()
-		width += size.X
-		height = max(height, size.Y)
+		s := c.Size()
+		size.X += s.X
+		size.Y = max(size.Y, s.Y)
 	}
-	return Size{width, height}
+	return size
 }
 
-func (s *HorizontalStack) AddText(str string, color color.Color) Craft {
-	s.texts = append(s.texts, text{str, color})
+func (s *HorizontalStack) AddText(str string, color color.Color) Self {
+	s.texts = append(s.texts, types.TextInfo{Str: str, Color: color})
 	for _, c := range s.crafts {
 		c.AddText(str, color)
 	}
 	return s
+}
+
+func (s *HorizontalStack) Update(p types.Position) (err error) {
+	for _, c := range s.crafts {
+		err = errors.Join(err, c.Update(p))
+		p.X += c.Size().X
+	}
+	return
 }
 
 func (s *HorizontalStack) Const() *Image {
@@ -192,11 +213,11 @@ func (s *HorizontalStack) Const() *Image {
 // ```
 type VerticalStack struct {
 	crafts []Craft
-	texts  []text
+	texts  []types.TextInfo
 }
 
 func NewVerticalStack(crafts ...Craft) *VerticalStack {
-	return &VerticalStack{crafts, []text{}}
+	return &VerticalStack{crafts, []types.TextInfo{}}
 }
 
 func (s *VerticalStack) Image() *ebiten.Image {
@@ -211,30 +232,38 @@ func (s *VerticalStack) Image() *ebiten.Image {
 		y += float64(c.Size().Y)
 	}
 
-	for _, text := range s.texts {
-		drawText(image, text.str, text.color)
+	for _, t := range s.texts {
+		util.DrawText(image, t.Str, t.Color)
 	}
 
 	return image
 }
 
-func (s *VerticalStack) Size() Size {
-	width, height := 0, 0
+func (s *VerticalStack) Size() types.Size {
+	size := types.Size{}
 	for _, c := range s.crafts {
-		size := c.Size()
-		width = max(width, size.X)
-		height += size.Y
+		s := c.Size()
+		size.X = max(size.X, s.X)
+		size.Y += s.Y
 	}
-	return Size{width, height}
+	return size
 }
 
-func (s *VerticalStack) AddText(str string, color color.Color) Craft {
-	s.texts = append(s.texts, text{str, color})
+func (s *VerticalStack) AddText(str string, color color.Color) Self {
+	s.texts = append(s.texts, types.TextInfo{Str: str, Color: color})
 	return s
 }
 
 func (s *VerticalStack) Const() *Image {
 	return &Image{s.Image()}
+}
+
+func (s *VerticalStack) Update(p types.Position) (err error) {
+	for _, c := range s.crafts {
+		err = errors.Join(err, c.Update(p))
+		p.Y += c.Size().Y
+	}
+	return
 }
 
 // Layer Craft
@@ -249,11 +278,11 @@ func (s *VerticalStack) Const() *Image {
 // ```
 type Layer struct {
 	crafts []Craft
-	texts  []text
+	texts  []types.TextInfo
 }
 
 func NewLayer(crafts ...Craft) *Layer {
-	return &Layer{crafts, []text{}}
+	return &Layer{crafts, []types.TextInfo{}}
 }
 
 func (l *Layer) Image() *ebiten.Image {
@@ -265,30 +294,37 @@ func (l *Layer) Image() *ebiten.Image {
 		image.DrawImage(w.Image(), op)
 	}
 
-	for _, text := range l.texts {
-		drawText(image, text.str, text.color)
+	for _, t := range l.texts {
+		util.DrawText(image, t.Str, t.Color)
 	}
 
 	return image
 }
 
-func (l *Layer) Size() Size {
-	width, height := 0, 0
+func (l *Layer) Size() types.Size {
+	size := types.Size{}
 	for _, c := range l.crafts {
 		img := c.Image()
-		size := img.Bounds().Size()
-		width = max(width, size.X)
-		height = max(height, size.Y)
+		s := img.Bounds().Size()
+		size.X = max(size.X, s.X)
+		size.Y = max(size.Y, s.Y)
 	}
 
-	return Size{width, height}
+	return size
 }
 
-func (l *Layer) AddText(str string, color color.Color) Craft {
-	l.texts = append(l.texts, text{str, color})
+func (l *Layer) AddText(str string, color color.Color) Self {
+	l.texts = append(l.texts, types.TextInfo{Str: str, Color: color})
 	return l
 }
 
 func (l *Layer) Const() *Image {
 	return &Image{l.Image()}
+}
+
+func (l *Layer) Update(p types.Position) (err error) {
+	for _, c := range l.crafts {
+		err = errors.Join(err, c.Update(p))
+	}
+	return
 }

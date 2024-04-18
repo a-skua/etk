@@ -6,12 +6,19 @@ import (
 	"image/color"
 	_ "image/jpeg"
 	"log"
+	"log/slog"
 
 	"github.com/a-skua/etk"
 	"github.com/a-skua/etk/craft"
+	"github.com/a-skua/etk/craft/action"
+	"github.com/a-skua/etk/craft/types"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
 )
+
+func init() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+}
 
 func main() {
 	const (
@@ -33,18 +40,25 @@ func main() {
 		&etk.DefaultScene{
 			Craft: craft.NewVerticalStack(
 				craft.NewBox(
-					craft.NewFill(craft.Size{X: 10, Y: 10}, color.White),
-					craft.MarginAll(10),
+					action.NewMousePressed(
+						craft.NewFill(types.Size{X: 10, Y: 10}, color.White),
+						ebiten.MouseButtonLeft,
+						func(f *craft.Fill) error {
+							*f = *craft.NewFill(f.Size(), color.RGBA{255, 0, 0, 255})
+							return nil
+						},
+					),
+					types.MarginAll(10),
 				),
 				craft.NewBox(
 					craft.NewImage(ebitenPng),
-					craft.MarginAll(10),
-				),
-			).Const(),
+					types.MarginAll(10),
+				).Const(),
+			),
 		},
 	)
 
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(game.Debug()); err != nil {
 		log.Fatal(err)
 	}
 }

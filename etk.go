@@ -6,6 +6,7 @@ import (
 	"image/color"
 
 	"github.com/a-skua/etk/craft"
+	"github.com/a-skua/etk/craft/types"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -32,8 +33,8 @@ func (DefaultScene) Previous() bool {
 	return false
 }
 
-func (DefaultScene) Update() error {
-	return nil
+func (s *DefaultScene) Update() error {
+	return s.Craft.Update(types.Position{})
 }
 
 func (s DefaultScene) Draw(screen *ebiten.Image) {
@@ -92,13 +93,13 @@ func New(width, height int, scene Scene, scenes ...Scene) *Game {
 }
 
 func (g *Game) Update() error {
-	if g.scene.Current().Next() {
-		g.scene.next()
-		g.scene.Current().Init()
-	} else if g.scene.Current().Previous() {
-		g.scene.prev()
-		g.scene.Current().Init()
-	}
+	// if g.scene.Current().Next() {
+	// 	g.scene.next()
+	// 	g.scene.Current().Init()
+	// } else if g.scene.Current().Previous() {
+	// 	g.scene.prev()
+	// 	g.scene.Current().Init()
+	// }
 
 	err := g.scene.Current().Update()
 	for _, option := range g.options {
@@ -125,10 +126,12 @@ func (d debug) Update() error {
 }
 
 func (d debug) Draw(screen *ebiten.Image) {
+	x, y := ebiten.CursorPosition()
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"FPS: %0.2f\nTPS: %0.2f",
+		"FPS: %0.2f\nTPS: %0.2f\nP: (%d, %d)\n",
 		ebiten.ActualFPS(),
 		ebiten.ActualTPS(),
+		x, y,
 	))
 }
 

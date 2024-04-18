@@ -5,35 +5,78 @@ import (
 	"image"
 	"image/color"
 	"testing"
+
+	"github.com/a-skua/etk/craft/types"
 )
 
 var _ Craft = NewImage(image.NewRGBA(image.Rect(0, 0, 100, 100)))
-var _ Craft = NewFill(Size{10, 10}, color.White)
-var _ Craft = NewBox(NewFill(Size{10, 10}, color.White), Margin{})
+var _ Craft = NewFill(types.Size{X: 10, Y: 10}, color.White)
+var _ Craft = NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{})
 var _ Craft = NewHorizontalStack(
-	NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
-	NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
+	NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
+	NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
 )
 var _ Craft = NewVerticalStack(
-	NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
-	NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
+	NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
+	NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
 )
 var _ Craft = NewLayer(
-	NewFill(Size{10, 20}, color.White),
-	NewFill(Size{20, 10}, color.White),
+	NewFill(types.Size{X: 10, Y: 20}, color.White),
+	NewFill(types.Size{X: 20, Y: 10}, color.White),
 )
+
+func TestBoxSize(t *testing.T) {
+	tests := []struct {
+		craft Craft
+		want  types.Size
+	}{
+		{
+			NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
+			types.Size{X: 10, Y: 10},
+		},
+		{
+			NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{Left: 10, Top: 15, Right: 10, Bottom: 15}),
+			types.Size{X: 30, Y: 40},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprint(i+1), func(t *testing.T) {
+			size := tt.craft.Size()
+			if size != tt.want {
+				t.Errorf("types.Size should return %v, but got %v", tt.want, size)
+			}
+		})
+	}
+}
+
+func TestBoxUpdate(t *testing.T) {
+	box := NewBox(
+		&testingCraft{
+			updateHandler: func(p types.Position) error {
+				want := types.Position{X: 10, Y: 10}
+				if p != want {
+					t.Errorf("Update should receive %v, but got %v", want, p)
+				}
+				return nil
+			},
+		},
+		types.MarginAll(10),
+	)
+	box.Update(types.Position{})
+}
 
 func TestHorizontalStackSize(t *testing.T) {
 	tests := []struct {
 		widgets []Craft
-		want    Size
+		want    types.Size
 	}{
 		{
 			[]Craft{
-				NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
-				NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
+				NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
+				NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
 			},
-			Size{20, 10},
+			types.Size{X: 20, Y: 10},
 		},
 	}
 
@@ -42,23 +85,59 @@ func TestHorizontalStackSize(t *testing.T) {
 			s := NewHorizontalStack(tt.widgets...)
 			size := s.Size()
 			if size != tt.want {
-				t.Errorf("Size should return %v, but got %v", tt.want, size)
+				t.Errorf("types.Size should return %v, but got %v", tt.want, size)
 			}
 		})
 	}
 }
 
+func TestHorizontalStackUpdate(t *testing.T) {
+	stack := NewHorizontalStack(
+		&testingCraft{
+			updateHandler: func(p types.Position) error {
+				want := types.Position{X: 0, Y: 0}
+				if p != want {
+					t.Errorf("Update should receive %v, but got %v", want, p)
+				}
+				return nil
+			},
+			size: types.Size{X: 10, Y: 10},
+		},
+		&testingCraft{
+			updateHandler: func(p types.Position) error {
+				want := types.Position{X: 10, Y: 0}
+				if p != want {
+					t.Errorf("Update should receive %v, but got %v", want, p)
+				}
+				return nil
+			},
+			size: types.Size{X: 10, Y: 10},
+		},
+		&testingCraft{
+			updateHandler: func(p types.Position) error {
+				want := types.Position{X: 20, Y: 0}
+				if p != want {
+					t.Errorf("Update should receive %v, but got %v", want, p)
+				}
+				return nil
+			},
+			size: types.Size{X: 10, Y: 10},
+		},
+	)
+	stack.Update(types.Position{})
+}
+
 func TestVerticalStackSize(t *testing.T) {
 	tests := []struct {
 		widgets []Craft
-		want    Size
+		want    types.Size
 	}{
 		{
 			[]Craft{
-				NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
-				NewBox(NewFill(Size{10, 10}, color.White), Margin{}),
+				NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
+				NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
 			},
-			Size{10, 20},
+			types.Size{X: 10, Y: 20},
 		},
 	}
 
@@ -67,24 +146,60 @@ func TestVerticalStackSize(t *testing.T) {
 			s := NewVerticalStack(tt.widgets...)
 			size := s.Size()
 			if size != tt.want {
-				t.Errorf("Size should return %v, but got %v", tt.want, size)
+				t.Errorf("types.Size should return %v, but got %v", tt.want, size)
 			}
 		})
 	}
 }
 
+func TestVerticalStackUpdate(t *testing.T) {
+	stack := NewVerticalStack(
+		&testingCraft{
+			updateHandler: func(p types.Position) error {
+				want := types.Position{X: 0, Y: 0}
+				if p != want {
+					t.Errorf("Update should receive %v, but got %v", want, p)
+				}
+				return nil
+			},
+			size: types.Size{X: 10, Y: 10},
+		},
+		&testingCraft{
+			updateHandler: func(p types.Position) error {
+				want := types.Position{X: 0, Y: 10}
+				if p != want {
+					t.Errorf("Update should receive %v, but got %v", want, p)
+				}
+				return nil
+			},
+			size: types.Size{X: 10, Y: 10},
+		},
+		&testingCraft{
+			updateHandler: func(p types.Position) error {
+				want := types.Position{X: 0, Y: 20}
+				if p != want {
+					t.Errorf("Update should receive %v, but got %v", want, p)
+				}
+				return nil
+			},
+			size: types.Size{X: 10, Y: 10},
+		},
+	)
+	stack.Update(types.Position{})
+}
+
 func TestLayerSize(t *testing.T) {
 	tests := []struct {
 		widgets []Craft
-		want    Size
+		want    types.Size
 	}{
 		{
 			[]Craft{
-				NewFill(Size{10, 30}, color.White),
-				NewFill(Size{20, 20}, color.White),
-				NewFill(Size{30, 10}, color.White),
+				NewFill(types.Size{X: 10, Y: 30}, color.White),
+				NewFill(types.Size{X: 20, Y: 20}, color.White),
+				NewFill(types.Size{X: 30, Y: 10}, color.White),
 			},
-			Size{30, 30},
+			types.Size{X: 30, Y: 30},
 		},
 	}
 
@@ -93,7 +208,7 @@ func TestLayerSize(t *testing.T) {
 			l := NewLayer(tt.widgets...)
 			size := l.Size()
 			if size != tt.want {
-				t.Errorf("Size should return %v, but got %v", tt.want, size)
+				t.Errorf("types.Size should return %v, but got %v", tt.want, size)
 			}
 		})
 	}
