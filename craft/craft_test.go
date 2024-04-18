@@ -11,6 +11,11 @@ import (
 
 var _ Craft = NewImage(image.NewRGBA(image.Rect(0, 0, 100, 100)))
 var _ Craft = NewFill(types.Size{X: 10, Y: 10}, color.White)
+var _ Craft = NewSwitch(
+	NewFill(types.Size{X: 10, Y: 10}, color.White),
+	NewFill(types.Size{X: 10, Y: 10}, color.White),
+	NewFill(types.Size{X: 10, Y: 10}, color.White),
+)
 var _ Craft = NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{})
 var _ Craft = NewHorizontalStack(
 	NewBox(NewFill(types.Size{X: 10, Y: 10}, color.White), types.Margin{}),
@@ -24,6 +29,52 @@ var _ Craft = NewLayer(
 	NewFill(types.Size{X: 10, Y: 20}, color.White),
 	NewFill(types.Size{X: 20, Y: 10}, color.White),
 )
+
+func TestSwitchNext(t *testing.T) {
+	switcher := NewSwitch(
+		NewFill(types.Size{X: 10, Y: 10}, color.White),
+		NewFill(types.Size{X: 10, Y: 10}, color.White),
+		NewFill(types.Size{X: 10, Y: 10}, color.White),
+	)
+
+	switcher.Next()
+	if switcher.index != 1 {
+		t.Errorf("Next should increment index, but got %d", switcher.index)
+	}
+
+	switcher.Next()
+	if switcher.index != 2 {
+		t.Errorf("Next should increment index, but got %d", switcher.index)
+	}
+
+	switcher.Next()
+	if switcher.index != 0 {
+		t.Errorf("Next should reset index, but got %d", switcher.index)
+	}
+}
+
+func TestSwitchPrev(t *testing.T) {
+	switcher := NewSwitch(
+		NewFill(types.Size{X: 10, Y: 10}, color.White),
+		NewFill(types.Size{X: 10, Y: 10}, color.White),
+		NewFill(types.Size{X: 10, Y: 10}, color.White),
+	)
+
+	switcher.Prev()
+	if switcher.index != 2 {
+		t.Errorf("Prev should decrement index, but got %d", switcher.index)
+	}
+
+	switcher.Prev()
+	if switcher.index != 1 {
+		t.Errorf("Prev should decrement index, but got %d", switcher.index)
+	}
+
+	switcher.Prev()
+	if switcher.index != 0 {
+		t.Errorf("Prev should reset index, but got %d", switcher.index)
+	}
+}
 
 func TestBoxSize(t *testing.T) {
 	tests := []struct {

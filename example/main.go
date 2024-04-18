@@ -34,21 +34,58 @@ func main() {
 		log.Fatal(err)
 	}
 
+	crafts := []craft.Craft{
+		craft.NewFill(types.Size{X: 10, Y: 10}, color.RGBA{255, 0, 0, 255}),
+		craft.NewFill(types.Size{X: 10, Y: 10}, color.RGBA{0, 255, 0, 255}),
+		craft.NewFill(types.Size{X: 10, Y: 10}, color.RGBA{0, 0, 255, 255}),
+	}
+
 	game := etk.New(
 		screenWidth,
 		screenHeight,
 		&etk.DefaultScene{
 			Craft: craft.NewVerticalStack(
-				craft.NewBox(
-					action.NewMousePressed(
-						craft.NewFill(types.Size{X: 10, Y: 10}, color.White),
-						ebiten.MouseButtonLeft,
-						func(f *craft.Fill) error {
-							*f = *craft.NewFill(f.Size(), color.RGBA{255, 0, 0, 255})
-							return nil
-						},
+				craft.NewHorizontalStack(
+					craft.NewBox(
+						action.NewMousePressed(
+							craft.NewSwitch(crafts...),
+							ebiten.MouseButtonLeft,
+							func(f *craft.Switch) error { f.Next(); return nil },
+						),
+						types.MarginAll(10),
 					),
-					types.MarginAll(10),
+					craft.NewBox(
+						action.NewMousePressed(
+							craft.NewSwitch(crafts...),
+							ebiten.MouseButtonLeft,
+							func(f *craft.Switch) error { f.Next(); return nil },
+						),
+						types.MarginAll(10),
+					),
+					craft.NewBox(
+						action.NewMousePressed(
+							craft.NewSwitch(crafts...),
+							ebiten.MouseButtonLeft,
+							func(f *craft.Switch) error { f.Next(); return nil },
+						),
+						types.MarginAll(10),
+					),
+					craft.NewBox(
+						action.NewMousePressed(
+							craft.NewSwitch(crafts...),
+							ebiten.MouseButtonLeft,
+							func(f *craft.Switch) error { f.Next(); return nil },
+						),
+						types.MarginAll(10),
+					),
+					craft.NewBox(
+						action.NewMousePressed(
+							craft.NewSwitch(crafts...),
+							ebiten.MouseButtonLeft,
+							func(f *craft.Switch) error { f.Next(); return nil },
+						),
+						types.MarginAll(10),
+					),
 				),
 				craft.NewBox(
 					craft.NewImage(ebitenPng),

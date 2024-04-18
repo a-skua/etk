@@ -91,6 +91,52 @@ func (f *Fill) Update(p types.Position) error {
 	return nil
 }
 
+// Switch Craft
+type Switch struct {
+	crafts []Craft
+	index  int
+	texts  []types.TextInfo
+}
+
+func NewSwitch(crafts ...Craft) *Switch {
+	return &Switch{crafts, 0, []types.TextInfo{}}
+}
+
+func (s *Switch) Image() *ebiten.Image {
+	return s.crafts[s.index].Image()
+}
+
+func (s *Switch) Size() types.Size {
+	return s.crafts[s.index].Size()
+}
+
+func (s *Switch) AddText(str string, color color.Color) Self {
+	s.texts = append(s.texts, types.TextInfo{Str: str, Color: color})
+	return s
+}
+
+func (s *Switch) Update(p types.Position) error {
+	return s.crafts[s.index].Update(p)
+}
+
+func (s *Switch) Const() *Image {
+	return &Image{s.Image()}
+}
+
+func (s *Switch) Next() {
+	s.index++
+	if s.index >= len(s.crafts) {
+		s.index = 0
+	}
+}
+
+func (s *Switch) Prev() {
+	s.index--
+	if s.index < 0 {
+		s.index = len(s.crafts) - 1
+	}
+}
+
 // Box Craft
 type Box struct {
 	craft  Craft
